@@ -3,8 +3,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import ProgressBar from "@/components/progressBar";
 import { ChevronLeft, X } from "lucide-react";
-//import ResultCard from "./ResultCard";
-//import QuizzSubmission from "./QuizzSubmission";
+import ResultCard from "./ResultCard";
+import QuizzSubmission from "./QuizzSubmission";
 
 const questions = [
   {
@@ -72,22 +72,22 @@ export default function Home() {
 
   const scorePercentage: number = Math.round((score / questions.length) * 100);
 
-//   if (submitted) {
-//     return (
-//       <QuizzSubmission
-//         score={score}
-//         scorePercentage={scorePercentage}
-//         totalQuestions={questions.length}
-//       />
-//     )
-//   }
+  if (submitted) {
+    return (
+      <QuizzSubmission
+        score={score}
+        scorePercentage={scorePercentage}
+        totalQuestions={questions.length}
+      />
+    )
+  }
 
   return (
     <div className="flex flex-col flex-1">
       <div className="position-sticky top-0 z-10 shadow-md py-4 w-full">
         <header className="grid grid-cols-[auto,1fr,auto] grid-flow-col items-center justify-between py-2 gap-2">
           <Button size="icon" variant="outline"><ChevronLeft /></Button>
-          
+          <ProgressBar value={(currentQuestion / questions.length) * 100} />
           <Button size="icon" variant="outline">
             <X />
           </Button>
@@ -98,21 +98,21 @@ export default function Home() {
           <div>
             <h2 className="text-3xl font-bold">{questions[currentQuestion].questionText}</h2>
             <div className="grid grid-cols-1 gap-6 mt-6">
-              {/* {
+              {
                 questions[currentQuestion].answers.map(answer => {
                   const variant = selectedAnswer === answer.id ? (answer.isCorrect ? "neoSuccess" : "neoDanger") : "neoOutline";
                   return (
                     <Button key={answer.id} variant={variant} size="xl" onClick={() => handleAnswer(answer)}><p className="whitespace-normal">{answer.answerText}</p></Button>
                   )
                 })
-              } */}
+              }
             </div>
           </div>
         )}
       </main>
       <footer className="footer pb-9 px-6 relative mb-0">
-        {/* <ResultCard isCorrect={isCorrect} correctAnswer={questions[currentQuestion].answers.find(answer => answer.isCorrect === true)?.answerText || ""} /> */}
-        <Button variant="secondary" size="lg" onClick={handleNext}>{!started ? 'Start' : (currentQuestion === questions.length - 1) ? 'Submit' : 'Next'}</Button>
+        <ResultCard isCorrect={isCorrect} correctAnswer={questions[currentQuestion].answers.find(answer => answer.isCorrect === true)?.answerText || ""} />
+        <Button variant="neo" size="lg" onClick={handleNext}>{!started ? 'Start' : (currentQuestion === questions.length - 1) ? 'Submit' : 'Next'}</Button>
       </footer>
     </div>
   )
