@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-//import ProgressBar from "@/components/progressBar";
+import ProgressBar from "@/components/progressBar";
 import { ChevronLeft, X } from "lucide-react";
 //import ResultCard from "./ResultCard";
 //import QuizzSubmission from "./QuizzSubmission";
@@ -87,7 +87,7 @@ export default function Home() {
       <div className="position-sticky top-0 z-10 shadow-md py-4 w-full">
         <header className="grid grid-cols-[auto,1fr,auto] grid-flow-col items-center justify-between py-2 gap-2">
           <Button size="icon" variant="outline"><ChevronLeft /></Button>
-          {/* <ProgressBar value={(currentQuestion / questions.length) * 100} /> */}
+          
           <Button size="icon" variant="outline">
             <X />
           </Button>
