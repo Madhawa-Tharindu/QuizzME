@@ -1,3 +1,4 @@
+'use client';
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
@@ -13,7 +14,7 @@ export default function Home() {
           <div className="text-center flex gap-6 flex-col">
             <h1 className="text-3xl font-bold">Get quizzed about anything!</h1>
             <h3 className="text-sm">Upload documents, and easily generate your quizzes with AI.</h3>
-            <Button variant="link" className="mt-4 h-14 text-white" asChild><Link href="quizz/new">Get Started</Link></Button>
+            <Button variant="link" className="mt-4 h-14 text-white" asChild><Link href="quizz/">Get Started</Link></Button>
           </div>
         </div>
       </main>
