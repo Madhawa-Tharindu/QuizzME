@@ -53,7 +53,7 @@ const UploadDoc = () => {
         </label>
         <p className="text-secondary-foreground my-2">Supported file types: pdf</p>
         {error ? <p className="text-red-600">{error}</p> : null}
-        <Button size="lg" className="mt-2" type="submit">Generate Quiz 🪄</Button>
+        <Button size="lg" className="mt-2" type="submit">Generate Quizz 🪄</Button>
       </form>}
     </div>
   )

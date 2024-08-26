@@ -5,44 +5,27 @@ import ProgressBar from "@/components/progressBar";
 import { ChevronLeft, X } from "lucide-react";
 import ResultCard from "./ResultCard";
 import QuizzSubmission from "./QuizzSubmission";
+import { InferSelectModel } from "drizzle-orm";
+import { questionAnswers, questions as DbQuestions, quizzes } from "@/db/schema";
+import { saveSubmission } from "@/actions/saveSubmissions";
+import { useRouter } from "next/navigation";
 
-const questions = [
-  {
-    questionText: "What is React?",
-    answers: [
-      { answerText: "A library for building user interfaces", isCorrect: true, id: 1 },
-      { answerText: "A front-end framework", isCorrect: false, id: 2 },
-      { answerText: "A back-end framework", isCorrect: false, id: 3 },
-      { answerText: "A database", isCorrect: false, id: 4 }
-    ]
-  },
-  {
-    questionText: "What is JSX?",
-    answers: [
-      { answerText: "JavaScript XML", isCorrect: true, id: 1 },
-      { answerText: "JavaScript", isCorrect: false, id: 2 },
-      { answerText: "JavaScript and XML", isCorrect: false, id: 3 },
-      { answerText: "JavaScript and HTML", isCorrect: false, id: 4 }
-    ]
-  },
-  {
-    questionText: "What is the virtual DOM?",
-    answers: [
-      { answerText: "A virtual representation of the DOM", isCorrect: true, id: 1 },
-      { answerText: "A real DOM", isCorrect: false, id: 2 },
-      { answerText: "A virtual representation of the browser", isCorrect: false, id: 3 },
-      { answerText: "A virtual representation of the server", isCorrect: false, id: 4 }
-    ]
-  }
-];
+type Answer = InferSelectModel<typeof questionAnswers>;
+type Question = InferSelectModel<typeof DbQuestions> & { answers: Answer[] };
+type Quizz = InferSelectModel<typeof quizzes> & { questions: Question[] };
 
-export default function Home() {
+type Props = {
+  quizz: Quizz
+}
+
+export default function QuizzQuestions(props: Props) {
+  const { questions } = props.quizz;
   const [started, setStarted] = useState<boolean>(false);
   const [currentQuestion, setCurrentQuestion] = useState<number>(0);
   const [score, setScore] = useState<number>(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [userAnswers, setUserAnswers] = useState<{ questionId: number, answerId: number }[]>([]);
   const [submitted, setSubmitted] = useState<boolean>(false);
+  const router = useRouter();
 
   const handleNext = () => {
     if (!started) {
@@ -56,21 +39,43 @@ export default function Home() {
       setSubmitted(true);
       return;
     }
-
-    setSelectedAnswer(null);
-    setIsCorrect(null);
   }
 
-  const handleAnswer = (answer: any) => {
-    setSelectedAnswer(answer.id);
+  const handleAnswer = (answer: Answer, questionId: number) => {
+    const newUserAnswersArr = [...userAnswers, {
+      questionId,
+      answerId: answer.id,
+    }];
+    setUserAnswers(newUserAnswersArr);
     const isCurrentCorrect = answer.isCorrect;
     if (isCurrentCorrect) {
       setScore(score + 1);
     }
-    setIsCorrect(isCurrentCorrect);
+  }
+
+  const handleSubmit = async () => {
+    try {
+      const subId = await saveSubmission({ score }, props.quizz.id);
+    } catch (e) {
+      console.log(e);
+    }
+
+    setSubmitted(true);
+  }
+
+  const handlePressPrev = () => {
+    if (currentQuestion !== 0) {
+      setCurrentQuestion(prevCurrentQuestion => prevCurrentQuestion - 1);
+    }
+  }
+
+  const handleExit = () => {
+    router.push('/dashboard');
   }
 
   const scorePercentage: number = Math.round((score / questions.length) * 100);
+  const selectedAnswer: number | null | undefined = userAnswers.find((item) => item.questionId === questions[currentQuestion].id)?.answerId;
+  const isCorrect: boolean | null | undefined = questions[currentQuestion].answers.findIndex((answer) => answer.id === selectedAnswer) !== -1 ? questions[currentQuestion].answers.find((answer) => answer.id === selectedAnswer)?.isCorrect : null;
 
   if (submitted) {
     return (
@@ -86,9 +91,9 @@ export default function Home() {
     <div className="flex flex-col flex-1">
       <div className="position-sticky top-0 z-10 shadow-md py-4 w-full">
         <header className="grid grid-cols-[auto,1fr,auto] grid-flow-col items-center justify-between py-2 gap-2">
-          <Button size="icon" variant="outline"><ChevronLeft /></Button>
+          <Button size="icon" variant="outline" onClick={handlePressPrev}><ChevronLeft /></Button>
           <ProgressBar value={(currentQuestion / questions.length) * 100} />
-          <Button size="icon" variant="outline">
+          <Button size="icon" variant="outline" onClick={handleExit}>
             <X />
           </Button>
         </header>
@@ -102,7 +107,7 @@ export default function Home() {
                 questions[currentQuestion].answers.map(answer => {
                   const variant = selectedAnswer === answer.id ? (answer.isCorrect ? "neoSuccess" : "neoDanger") : "neoOutline";
                   return (
-                    <Button key={answer.id} variant={variant} size="xl" onClick={() => handleAnswer(answer)}><p className="whitespace-normal">{answer.answerText}</p></Button>
+                    <Button key={answer.id} disabled={!!selectedAnswer} variant={variant} size="xl" onClick={() => handleAnswer(answer, questions[currentQuestion].id)} className="disabled:opacity-100"><p className="whitespace-normal">{answer.answerText}</p></Button>
                   )
                 })
               }
@@ -112,7 +117,10 @@ export default function Home() {
       </main>
       <footer className="footer pb-9 px-6 relative mb-0">
         <ResultCard isCorrect={isCorrect} correctAnswer={questions[currentQuestion].answers.find(answer => answer.isCorrect === true)?.answerText || ""} />
-        <Button variant="neo" size="lg" onClick={handleNext}>{!started ? 'Start' : (currentQuestion === questions.length - 1) ? 'Submit' : 'Next'}</Button>
+        {
+          (currentQuestion === questions.length - 1) ? <Button variant="neo" size="lg" onClick={handleSubmit}>Submit</Button> :
+            <Button variant="neo" size="lg" onClick={handleNext}>{!started ? 'Start' : 'Next'}</Button>
+        }
       </footer>
     </div>
   )
